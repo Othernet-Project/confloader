@@ -22,7 +22,7 @@ __version__ = '1.0'
 __author__ = 'Outernet Inc <apps@outernet.is>'
 
 
-DEFAULT_SECTIONS = ('DEFAULT', 'bottle')
+DEFAULT_SECTIONS = ('global')
 FLOAT_RE = re.compile(r'^\d+\.\d+$')
 INT_RE = re.compile(r'^\d+$')
 SIZE_RE = re.compile(r'^\d+(\.\d{1,3})? ?[KMG]B$', re.I)

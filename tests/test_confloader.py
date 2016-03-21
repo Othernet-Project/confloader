@@ -91,10 +91,8 @@ def test_clean_value(conf, val):
 
 
 @pytest.mark.parametrize('section,key,comp', [
-    ('DEFAULT', 'foo', 'foo'),
-    ('DEFAULT', 'bar', 'bar'),
-    ('bottle', 'foo', 'foo'),
-    ('bottle', 'bar', 'bar'),
+    ('global', 'foo', 'foo'),
+    ('global', 'bar', 'bar'),
     ('database', 'foo', 'database.foo'),
     ('database', 'bar', 'database.bar'),
 ])
@@ -103,8 +101,7 @@ def test_get_compound_key(section, key, comp):
 
 
 @pytest.mark.parametrize('section,key,key_ext', [
-    ('DEFAULT', 'foo', ('foo', False)),
-    ('bottle', 'bar', ('bar', False)),
+    ('global', 'foo', ('foo', False)),
     ('database', 'foo', ('database.foo', False)),
     ('database', '+foo', ('database.foo', True)),
 ])
