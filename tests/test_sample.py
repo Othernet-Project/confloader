@@ -27,6 +27,13 @@ def test_sample():
     assert conf['section.abc'] == 12
 
 
+def test_sample_related():
+    conf = mod.ConfDict.from_file(sample_file)
+    assert conf['foo'] == 'bar'
+    assert conf['other_section.abc'] == 12
+    assert conf['other_section.bcd'] == 2
+
+
 def test_sample_with_defaults():
     conf = mod.ConfDict.from_file(sample_file, excellent=True)
     assert conf['excellent'] is True
