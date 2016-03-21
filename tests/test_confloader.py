@@ -172,14 +172,6 @@ def test_get_option_default():
     assert ret == 'default'
 
 
-def test_configure():
-    conf = mod.ConfDict()
-    conf.configure('foo/bar/baz.ini', True)
-    assert conf.path == 'foo/bar/baz.ini'
-    assert conf.base_path == 'foo/bar'
-    assert conf.skip_clean is True
-
-
 @mock.patch.object(mod.ConfDict, 'get_section')
 def test_parse_section(get_section):
     conf = mod.ConfDict()
@@ -373,6 +365,36 @@ def test_init_parser_with_fd(ConfigParser):
     conf._init_parser()
     assert conf.parser == mock_parser
     mock_parser.readfp.assert_called_once_with(buff)
+
+
+@mock.patch.object(mod.ConfDict, '_init_parser')
+@mock.patch.object(mod.ConfDict, '_check_conf')
+@mock.patch.object(mod.ConfDict, '_preprocess')
+@mock.patch.object(mod.ConfDict, '_process')
+@mock.patch.object(mod.ConfDict, '_postprocess')
+def test_load(postprocess, process, preprocess, check, init):
+    conf = mod.ConfDict()
+    conf.load()
+    # Load is just a wrapper that calls all these methods
+    for meth in postprocess, process, preprocess, check, init:
+        meth.assert_called_once_with()
+
+
+def test_configure():
+    conf = mod.ConfDict()
+    conf.configure('foo/bar/baz.ini', True)
+    assert conf.path == 'foo/bar/baz.ini'
+    assert conf.base_path == 'foo/bar'
+    assert conf.skip_clean is True
+
+
+@mock.patch.object(mod.ConfDict, 'load')
+@mock.patch.object(mod.ConfDict, 'configure')
+def test_from_file(configure, load):
+    ret = mod.ConfDict.from_file('foo/bar/baz.ini', False, foo='bar')
+    assert ret['foo'] == 'bar'
+    configure.assert_called_once_with('foo/bar/baz.ini', False)
+    load.assert_called_once_with()
 
 
 def test_setdefaults():

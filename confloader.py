@@ -278,6 +278,11 @@ class ConfDict(dict):
     def sections(self):
         return self.parser.sections()
 
+    def setdefaults(self, other):
+        for k in other:
+            if k not in self:
+                self[k] = other[k]
+
     @classmethod
     def from_file(cls, path, skip_clean=False, **defaults):
         # Instantiate the ConfDict class and configure it
@@ -286,8 +291,3 @@ class ConfDict(dict):
         self.configure(path, skip_clean)
         self.load()
         return self
-
-    def setdefaults(self, other):
-        for k in other:
-            if k not in self:
-                self[k] = other[k]
