@@ -13,15 +13,16 @@ import re
 import sys
 
 try:
-    from configparser import RawConfigParser as ConfigParser
+    from configparser import RawConfigParser as ConfigParser, NoOptionError
 except ImportError:
-    from ConfigParser import RawConfigParser as ConfigParser
+    from ConfigParser import RawConfigParser as ConfigParser, NoOptionError
 
 
 __version__ = '1.0'
 __author__ = 'Outernet Inc <apps@outernet.is>'
 
 
+DEFAULT_SECTIONS = ('DEFAULT', 'bottle')
 FLOAT_RE = re.compile(r'^\d+\.\d+$')
 INT_RE = re.compile(r'^\d+$')
 SIZE_RE = re.compile(r'^\d+(\.\d{1,3})? ?[KMG]B$', re.I)
@@ -38,6 +39,29 @@ def get_config_path(default=None):
     arg_str = ' '.join(sys.argv[1:])
     result = re.search(regex, arg_str)
     return result.group(1).strip(' \'"') if result else default
+
+
+def make_list(val):
+    """
+    If the value is not a list, it is converted to a list. Iterables like tuple
+    and list itself are converted to lists, whereas strings, integers, and
+    other values are converted to a list whose sole item is the original value.
+    """
+    if type(val) in [list, tuple]:
+        return list(val)
+    return [val]
+
+
+def extend_key(d, key, val):
+    """
+    Extends a dictionary key with a specified iterable. If the key does not
+    exist, it is assigned a list before extending. If the key exists, but maps
+    to a non-list value, the key value is convereted to a list before being
+    extended.
+    """
+    d.setdefault(key, [])
+    d[key] = make_list(d[key])
+    d[key].extend(val)
 
 
 def parse_size(size):
@@ -102,6 +126,18 @@ def parse_value(val):
     return val
 
 
+def get_compound_key(section, key):
+    if section in DEFAULT_SECTIONS:
+        return key
+    return '{}.{}'.format(section, key)
+
+
+def parse_key(section, key):
+    is_ext = key.startswith('+')
+    key = key.lstrip('+')
+    return get_compound_key(section, key), is_ext
+
+
 class ConfigurationError(Exception):
     """ Raised when application is not configured correctly """
     pass
@@ -122,64 +158,127 @@ class ConfigurationFormatError(ConfigurationError):
 
 
 class ConfDict(dict):
+    ConfigurationError = ConfigurationError
+    ConfigurationFormatError = ConfigurationFormatError
+
+    def __init__(self, *args, **kwargs):
+        self.path = None
+        self.parser = None
+        self.base_path = '.'
+        self.defaults = []
+        self.include = []
+        self._extensions = []
+        self.skip_clean = False
+        super(ConfDict, self).__init__(*args, **kwargs)
+
     def __getitem__(self, key):
         try:
             return super(ConfDict, self).__getitem__(key)
         except KeyError as err:
             raise ConfigurationFormatError(err)
 
+    def get_section(self, name):
+        return self.parser.items(name)
+
+    def get_option(self, section, name, default=None):
+        try:
+            return self.parser.get(section, name)
+        except NoOptionError:
+            return default
+
+    def _parse_section(self, section):
+        """
+        Given a section name, parses the section and returns a list of
+        extension keys (keys prefixed with '+' character) with their values.
+        """
+        extensions = []
+        for key, value in self.get_section(section):
+            compound_key, extends = parse_key(section, key)
+            if not self.skip_clean:
+                value = parse_value(value)
+            if extends:
+                extensions.append((compound_key, value))
+                continue
+            self[compound_key] = value
+        return extensions
+
+    def _get_config_paths(self, key):
+        """
+        Return a list of paths in the special config keys.
+        """
+        paths = parse_value(self.get_option('config', key, '\n'))
+        return make_list(paths)
+
+    def _preprocess(self):
+        """
+        Prepares for config loading by parsing the special config section and
+        setting up defaults and include lists. The defaults are also loaded
+        immediately to ensure they are successfully overwritten during
+        subsequent parsing.
+        """
+        if not self.parser.has_section('config'):
+            return
+        self.defaults = self._get_config_paths('defaults')
+        self.include = self._get_config_paths('include')
+        for p in self.defaults:
+            path = os.path.normpath(os.path.join(self.base_path, p))
+            self.setdefaults(self.__class__.from_file(path, self.skip_clean))
+
+    def _process(self):
+        """
+        Processes all sections one by one. The special section named 'config'
+        is skipped'.
+
+        While the sections are parsed, the extensions dictionary is updated.
+        """
+        self._extensions = []
+        for section in self.sections:
+            exts = self._parse_section(section)
+            self._extensions.extend(exts)
+
+    def _postprocess(self):
+        """
+        Finishes loading proces by processing all extensions and includes.
+        """
+        for k, v in self._extensions:
+            if self.skip_clean:
+                self.setdefault(k, '')
+                self[k] += v
+            else:
+                extend_key(self, k, v)
+        for p in self.include:
+            path = os.path.normpath(os.path.join(self.base_path, p))
+            self.update(self.__class__.from_file(path, self.skip_clean))
+
+    def load(self, path):
+        self.parser = ConfigParser()
+        if hasattr(path, 'read'):
+            self.parser.readfp(self.path)
+        else:
+            self.parser.read(path)
+        if not self.sections:
+            raise ConfigurationError("Missing or empty configuration file at"
+                                     "'{}'".format(self.path))
+        self._preprocess()
+        self._process()
+        self._postprocess()
+
+    def configure(self, path, skip_clean=False):
+        self.path = path
+        self.base_path = os.path.dirname(path)
+        self.skip_clean = skip_clean
+
+    @property
+    def sections(self):
+        return self.parser.sections()
+
     @classmethod
-    def from_file(cls, path, skip_clean=False, base_dir='.', **defaults):
-        path = os.path.normpath(os.path.join(base_dir, path))
+    def from_file(cls, path, skip_clean=False, **defaults):
+        # Instantiate the ConfDict class and configure it
         self = cls()
         self.update(defaults)
-        parser = ConfigParser()
-        parser.read(path)
-        sections = parser.sections()
-        if not sections:
-            raise ConfigurationError(
-                "Missing or empty configuration file at '{}'".format(path))
-
-        child_paths = []
-        default_paths = []
-        extensions = {}
-        for section in sections:
-            for key, value in parser.items(section):
-                extends = False
-                if key.startswith('+'):
-                    extends = True
-                    key = key[1:]
-
-                if section not in ('DEFAULT', 'bottle'):
-                    compound_key = '{}.{}'.format(section, key)
-                else:
-                    compound_key = key
-
-                if not skip_clean:
-                    value = parse_value(value)
-
-                if section == 'config' and key == 'defaults':
-                    default_paths = value
-                elif section == 'config' and key == 'include':
-                    child_paths = value
-                else:
-                    if extends:
-                        extensions[compound_key] = value
-                    else:
-                        self[compound_key] = value
-
-        for default in default_paths:
-            self.setdefaults(cls.from_file(default, skip_clean=skip_clean,
-                                           base_dir=base_dir))
-
-        for k in extensions:
-            self.setdefault(k, [])
-            self[k].extend(extensions[k])
-
-        for child in child_paths:
-            self.update(cls.from_file(child, skip_clean=skip_clean,
-                                      base_dir=base_dir))
-
+        self.configure(path, skip_clean)
+        self.load()
         return self
 
     def setdefaults(self, other):
