@@ -349,3 +349,38 @@ def test_postprocess_include(from_file, update):
     conf._postprocess()
     from_file.assert_called_once_with('test/foo/bar/baz.ini', conf.skip_clean)
     update.assert_called_once_with(from_file.return_value)
+
+
+@mock.patch(MOD + '.ConfigParser', specs=mod.ConfigParser)
+def test_init_parser(ConfigParser):
+    mock_parser = ConfigParser.return_value
+    conf = mod.ConfDict()
+    conf.path = 'foo/bar/baz.ini'
+    assert conf.parser is None
+    conf._init_parser()
+    assert conf.parser == mock_parser
+    mock_parser.read.assert_called_once_with('foo/bar/baz.ini')
+
+
+@mock.patch(MOD + '.ConfigParser', specs=mod.ConfigParser)
+def test_init_parser_with_fd(ConfigParser):
+    from StringIO import StringIO
+    mock_parser = ConfigParser.return_value
+    conf = mod.ConfDict()
+    buff = StringIO()
+    conf.path = buff
+    assert conf.parser is None
+    conf._init_parser()
+    assert conf.parser == mock_parser
+    mock_parser.readfp.assert_called_once_with(buff)
+
+
+def test_setdefaults():
+    conf = mod.ConfDict()
+    conf['foo'] = 'bar'
+    conf.setdefaults({
+        'foo': 1,
+        'bar': 2
+    })
+    assert conf['foo'] == 'bar'
+    assert conf['bar'] == 2

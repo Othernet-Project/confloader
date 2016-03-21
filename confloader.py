@@ -250,15 +250,21 @@ class ConfDict(dict):
             path = os.path.normpath(os.path.join(self.base_path, p))
             self.update(self.__class__.from_file(path, self.skip_clean))
 
-    def load(self, path):
+    def _init_parser(self):
         self.parser = ConfigParser()
-        if hasattr(path, 'read'):
+        if hasattr(self.path, 'read'):
             self.parser.readfp(self.path)
         else:
-            self.parser.read(path)
+            self.parser.read(self.path)
+
+    def _check_conf(self):
         if not self.sections:
             raise ConfigurationError("Missing or empty configuration file at"
                                      "'{}'".format(self.path))
+
+    def load(self):
+        self._init_parser()
+        self._check_conf()
         self._preprocess()
         self._process()
         self._postprocess()
