@@ -312,6 +312,10 @@ class ConfDict(dict):
         else:
             self.update(incl)
         self._extend(incl._extensions)
+        # We have to force extension before returning the incl ConfDict object
+        # because otherwise the extension keys will not become available.
+        incl.noextend = False
+        incl._extend()
         return incl
 
     @classmethod

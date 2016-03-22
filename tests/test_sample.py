@@ -85,3 +85,4 @@ def test_import_without_overwrite():
     assert conf['other_section.bcd'] == 2
     # But they are still avalable as return value
     assert ret['other_section.bcd'] == 11
+    assert ret['extend_me'] == [1, 2, 3]
