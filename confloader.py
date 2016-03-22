@@ -254,7 +254,9 @@ class ConfDict(dict):
         self._extend()
         for p in self.include:
             path = os.path.normpath(os.path.join(self.base_path, p))
-            self.update(self.__class__.from_file(path, self.skip_clean))
+            include = self.__class__.from_file(path, self.skip_clean,
+                                               noextend=True)
+            self.update(include)
 
     def _init_parser(self):
         self.parser = ConfigParser()
