@@ -14,7 +14,7 @@ VERSION = mod.__version__
 setup(
     name='confloader',
     version=VERSION,
-    license='GPL',
+    license='BSD',
     description=('Python module for loading .ini configuration files with '
                  'extra bells and whistles.'),
     long_description=read('README.rst'),
