@@ -8,7 +8,7 @@ except ImportError:
     from ConfigParser import RawConfigParser as ConfigParser, NoOptionError
 
 
-__version__ = '1.0'
+__version__ = '1.1a1'
 __author__ = 'Outernet Inc <apps@outernet.is>'
 
 
