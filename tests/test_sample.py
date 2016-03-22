@@ -23,8 +23,8 @@ def test_sample():
     assert conf['bytes_list'] == [10240, 12582912, 5368709120]
     assert conf['bool_list'] == [True, False, True, False]
     assert conf['mixed_list'] == ['foo', 12]
-    assert conf['multiline_string'] == ('This is a multiline string,\n'
-                                        'and it has two lines')
+    assert conf['multiline_value'] == ('This is a simple multiline value\n'
+                                       'that spans two lines.')
     assert conf['section.abc'] == 12
 
 
@@ -58,8 +58,6 @@ def test_sample_without_cleaning():
     assert conf['bytes_list'] == '\n10KB\n12 mB\n5 gb'
     assert conf['bool_list'] == '\nyes\nNO\ntrue\nFalse'
     assert conf['mixed_list'] == '\nfoo\n12'
-    assert conf['multiline_string'] == ('"""\nThis is a multiline string,\n'
-                                        'and it has two lines\n"""')
     assert conf['section.abc'] == '12'
 
 

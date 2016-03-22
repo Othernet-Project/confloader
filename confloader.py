@@ -120,10 +120,6 @@ def parse_value(val):
     if val.startswith('\n'):
         return [parse_value(v) for v in val[1:].split('\n')]
 
-    # Multi-line string: same as python with triple-doublequotes
-    if val.startswith('"""'):
-        return val.strip('"""').strip()
-
     # Everything else is returned as is
     return val
 

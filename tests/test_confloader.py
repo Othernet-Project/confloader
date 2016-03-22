@@ -87,7 +87,6 @@ def test_parse_size(conf, val):
     ('\nfoo\nbar', ['foo', 'bar']),
     ('\n1\n2', [1, 2]),
     ('\nyes\nno', [True, False]),
-    ('"""This is a\nmultiline\nstring"""', 'This is a\nmultiline\nstring'),
 ])
 def test_clean_value(conf, val):
     assert mod.parse_value(conf) == val
