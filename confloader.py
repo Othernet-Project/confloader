@@ -210,7 +210,7 @@ class ConfDict(dict):
         """
         Return a list of paths in the special config keys.
         """
-        paths = parse_value(self.get_option('config', key, '\n'))
+        paths = parse_value(self.get_option('config', key, ''))
         return make_list(paths)
 
     def _preprocess(self):

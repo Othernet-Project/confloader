@@ -203,7 +203,7 @@ def test_get_config_paths(get_option):
     conf = mod.ConfDict()
     get_option.return_value = '\nfoo/bar/baz.ini\nbaz/bar/foo.ini'
     ret = conf._get_config_paths('defaults')
-    get_option.assert_called_once_with('config', 'defaults', '\n')
+    get_option.assert_called_once_with('config', 'defaults', '')
     assert ret == ['foo/bar/baz.ini', 'baz/bar/foo.ini']
 
 
@@ -212,8 +212,17 @@ def test_get_config_paths_single_string(get_option):
     conf = mod.ConfDict()
     get_option.return_value = 'foo/bar/baz.ini'
     ret = conf._get_config_paths('defaults')
-    get_option.assert_called_once_with('config', 'defaults', '\n')
+    get_option.assert_called_once_with('config', 'defaults', '')
     assert ret == ['foo/bar/baz.ini']
+
+
+@mock.patch.object(mod.ConfDict, 'get_option')
+def test_get_config_paths_no_return(get_option):
+    conf = mod.ConfDict()
+    get_option.return_value = ''
+    ret = conf._get_config_paths('defaults')
+    get_option.assert_called_once_with('config', 'defaults', '')
+    assert ret == []
 
 
 @mock.patch.object(mod.ConfDict, '_get_config_paths')
