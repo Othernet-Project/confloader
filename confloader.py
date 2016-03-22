@@ -301,6 +301,14 @@ class ConfDict(dict):
             if k not in self:
                 self[k] = other[k]
 
+    def import_from_file(self, path, as_defaults=False):
+        incl = self.__class__.from_file(path, self.skip_clean, noextend=True)
+        if as_defaults:
+            self.setdefaults(incl)
+        else:
+            self.update(incl)
+        self._extend(incl._extensions)
+
     @classmethod
     def from_file(cls, path, skip_clean=False, noextend=False, **defaults):
         # Instantiate the ConfDict class and configure it

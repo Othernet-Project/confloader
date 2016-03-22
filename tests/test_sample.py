@@ -4,6 +4,7 @@ import confloader as mod
 
 
 sample_file = os.path.join(os.path.dirname(__file__), 'sample.ini')
+include2 = os.path.join(os.path.dirname(__file__), 'include2.ini')
 
 
 def test_sample():
@@ -60,3 +61,25 @@ def test_sample_without_cleaning():
     assert conf['multiline_string'] == ('"""\nThis is a multiline string,\n'
                                         'and it has two lines\n"""')
     assert conf['section.abc'] == '12'
+
+
+def test_import():
+    conf = mod.ConfDict.from_file(sample_file)
+    conf.import_from_file(include2)
+    # Extension still works as expected:
+    assert conf['extend_me'] == ['foo', 'bar', 'baz', 1, 2, 3]
+    # New key is successfully added
+    assert conf['other_section.cde'] == 3
+    # Pre-existing keys are overwritten
+    assert conf['other_section.bcd'] == 11
+    # New section is added
+    assert conf['new_section.awesome'] is True
+
+
+def test_import_without_overwrite():
+    conf = mod.ConfDict.from_file(sample_file)
+    conf.import_from_file(include2, as_defaults=True)
+    # Extension still works as expected:
+    assert conf['extend_me'] == ['foo', 'bar', 'baz', 1, 2, 3]
+    # Pre-existing keys are *not* overwritten
+    assert conf['other_section.bcd'] == 2
