@@ -313,6 +313,8 @@ def test_extend():
     conf._extend()
     assert conf['foo'] == [1, 2, 3, 4, 5, 6]
     assert conf['bar'] == ['a', 'b', 'c', 'd', 'e', 'f']
+    # After extending is performed, extensions are cleared
+    assert conf._extensions == []
 
 
 def test_extend_no_clean():
@@ -365,8 +367,23 @@ def test_postprocess_include(from_file, update):
     conf.base_path = 'test'
     conf.include = ['foo/bar/baz.ini']
     conf._postprocess()
-    from_file.assert_called_once_with('test/foo/bar/baz.ini', conf.skip_clean)
+    from_file.assert_called_once_with('test/foo/bar/baz.ini', conf.skip_clean,
+                                      noextend=True)
     update.assert_called_once_with(from_file.return_value)
+
+
+@mock.patch.object(mod.ConfDict, 'update')
+@mock.patch.object(mod.ConfDict, 'from_file')
+def test_postprocess_with_extension_on_include(from_file, update):
+    conf = mod.ConfDict()
+    conf.include = ['foo/bar/baz.ini']
+    conf['foo'] = [1, 2, 3]
+    incl = mod.ConfDict()
+    incl.noextend = True
+    incl._extensions = [('foo', [4, 5, 6])]
+    from_file.return_value = incl
+    conf._postprocess()
+    assert conf['foo'] == [1, 2, 3, 4, 5, 6]
 
 
 @mock.patch(MOD + '.ConfigParser', specs=mod.ConfigParser)

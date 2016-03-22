@@ -237,15 +237,23 @@ class ConfDict(dict):
             exts = self._parse_section(section)
             self._extensions.extend(exts)
 
-    def _extend(self):
+    def _extend(self, extensions=None):
         if self.noextend:
             return
-        for k, v in self._extensions:
+        using_self = extensions is None
+        if using_self:
+            # We're using our own extensions, not the supplied one
+            extensions = self._extensions
+        for k, v in extensions:
             if self.skip_clean:
                 self.setdefault(k, '')
                 self[k] += v
             else:
                 extend_key(self, k, v)
+        # We only clear extensions if we are extending using the internal
+        # extensions list.
+        if using_self:
+            self._extensions = []
 
     def _postprocess(self):
         """
@@ -257,6 +265,7 @@ class ConfDict(dict):
             include = self.__class__.from_file(path, self.skip_clean,
                                                noextend=True)
             self.update(include)
+            self._extend(include._extensions)
 
     def _init_parser(self):
         self.parser = ConfigParser()
