@@ -78,8 +78,10 @@ def test_import():
 
 def test_import_without_overwrite():
     conf = mod.ConfDict.from_file(sample_file)
-    conf.import_from_file(include2, as_defaults=True)
+    ret = conf.import_from_file(include2, as_defaults=True)
     # Extension still works as expected:
     assert conf['extend_me'] == ['foo', 'bar', 'baz', 1, 2, 3]
     # Pre-existing keys are *not* overwritten
     assert conf['other_section.bcd'] == 2
+    # But they are still avalable as return value
+    assert ret['other_section.bcd'] == 11

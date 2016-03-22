@@ -312,6 +312,7 @@ class ConfDict(dict):
         else:
             self.update(incl)
         self._extend(incl._extensions)
+        return incl
 
     @classmethod
     def from_file(cls, path, skip_clean=False, noextend=False, defaults={}):
