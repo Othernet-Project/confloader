@@ -1,10 +1,3 @@
-"""
-confloader.py: Application configuration loader
-
-Copyright 2014-2016, Outernet Inc.
-Some rights reserved.
-"""
-
 import os
 import re
 import sys
@@ -32,6 +25,10 @@ FACTORS = {
 
 
 def get_config_path(default=None):
+    """
+    Attempt to obtain a path to configuration path from ``--conf`` command line
+    argument, and optionally fall back on specified default path.
+    """
     regex = r'--conf[=\s]{1}((["\']{1}(.+)["\']{1})|([^\s]+))\s*'
     arg_str = ' '.join(sys.argv[1:])
     result = re.search(regex, arg_str)
@@ -64,11 +61,10 @@ def extend_key(d, key, val):
 
 
 def parse_size(size):
-    """ Parses size with B, K, M, or G suffix and returns in size bytes
-
-    :param size:    human-readable size with suffix
-    :returns:       size in bytes or 0 if source string is using invalid
-                    notation
+    """
+    Parses size with B, KB, MB, or GB suffix and returns in size bytes. The
+    suffix is not metric but based on powers of 1024. The suffix is also
+    case-insensitive.
     """
     size = size.lower()[:-1]
     if size[-1] not in 'bkmg':
@@ -84,10 +80,19 @@ def parse_size(size):
 
 
 def parse_value(val):
-    """ Detect value type and coerce to appropriate Python type
+    """
+    Detect value type and coerce to appropriate Python type. The input must be
+    a string and the value's type is derived based on it's formatting. The
+    following types are supported:
 
-    :param val:     value in configuration format
-    :returns:       python value
+    - boolean ('yes', 'no', 'true', 'false', case-insensitive)
+    - None ('null', 'none', case-insensitive)
+    - integer (any number of digits, optionally prefixed with minus sign)
+    - float (digits with floating point, optionally prefix with minus sign)
+    - byte sizes (same as float, but with KB, MB, or GB suffix)
+    - lists (any value that sarts with a newline)
+
+    Other values are returned as is.
     """
     # True values: 'yes', 'Yes', 'true', 'True'
     if val.lower() in ('yes', 'true'):
@@ -122,24 +127,36 @@ def parse_value(val):
 
 
 def get_compound_key(section, key):
+    """
+    Return the key that will be used to look up configuration options.  Except
+    for the global keys, the compoint key is in ``<section>.<option>`` format.
+    """
     if section in DEFAULT_SECTIONS:
         return key
     return '{}.{}'.format(section, key)
 
 
 def parse_key(section, key):
+    """
+    Given section name and option name (key), return a compound key and a flag
+    that is ``True`` if the option marks an extension.
+    """
     is_ext = key.startswith('+')
     key = key.lstrip('+')
     return get_compound_key(section, key), is_ext
 
 
 class ConfigurationError(Exception):
-    """ Raised when application is not configured correctly """
+    """
+    Raised when application is not configured correctly.
+    """
     pass
 
 
 class ConfigurationFormatError(ConfigurationError):
-    """ Raised when configuration file is malformed """
+    """
+    Raised when configuration file is malformed.
+    """
     def __init__(self, keyerr):
         key = keyerr.args[0]
         if '.' in key:
@@ -153,6 +170,21 @@ class ConfigurationFormatError(ConfigurationError):
 
 
 class ConfDict(dict):
+    """
+    Dictionary subclass that is used to hold the parsed configuration options.
+
+    :py:class:`~ConfDict` is instantiated the same way as dicts. For this
+    reason, the paths to configuation files and similar are not passed to the
+    constructor. Instead, you should use the :py:meth:`~ConfDict.from_file`
+    classmethod.
+
+    Because this class is a dictionary, you can use the standard ``dict`` API
+    to access and modify the keys. There is a minor difference when accessing
+    key values, though. When using the subscript notation,
+    :py:class:`~ConfigurationFormatError` is raised instead of ``KeyError``
+    when the key is missing.
+    """
+
     ConfigurationError = ConfigurationError
     ConfigurationFormatError = ConfigurationFormatError
 
@@ -174,13 +206,36 @@ class ConfDict(dict):
             raise ConfigurationFormatError(err)
 
     def get_section(self, name):
+        """
+        Returns an iterable containing options for a given section. This method
+        does *not* return the dict values, but instead uses the underlying
+        parser object to retrieve the values from the parsed configuration
+        file.
+        """
         return self.parser.items(name)
 
     def get_option(self, section, name, default=None):
+        """
+        Returns a single configuration option that matches the given section
+        and option names. Optional default value can be specified using the
+        ``default`` parameter, and this value is returned when the option is
+        not found.
+
+        As with :py:meth:`~ConfDict.get_section` method, this method operates
+        on the parsed configuration file rather than dictionary data.
+        """
         try:
             return self.parser.get(section, name)
         except NoOptionError:
             return default
+
+    @property
+    def sections(self):
+        """
+        Returns an iterable containing the names of sections. This method uses
+        the underlying parser object and does not work with the dict values.
+        """
+        return self.parser.sections()
 
     def _parse_section(self, section):
         """
@@ -234,6 +289,14 @@ class ConfDict(dict):
             self._extensions.extend(exts)
 
     def _extend(self, extensions=None):
+        """
+        Extends the dictionary data using either the specified iterable
+        containing the extensions, or the extensions stored in the
+        :py:attr:`~ConfDict._extensions` property.
+
+        The extensions are two-tuples containing the key name and a list of
+        values.
+        """
         if self.noextend:
             return
         using_self = extensions is None
@@ -264,6 +327,10 @@ class ConfDict(dict):
             self._extend(include._extensions)
 
     def _init_parser(self):
+        """
+        Initialize the ``ConfigParser`` object and read the path or file-like
+        object stored in the :py:attr:`~ConfDict.path` property.
+        """
         self.parser = ConfigParser()
         if hasattr(self.path, 'read'):
             self.parser.readfp(self.path)
@@ -271,11 +338,33 @@ class ConfDict(dict):
             self.parser.read(self.path)
 
     def _check_conf(self):
+        """
+        Check whether there are any sections, and raise
+        :py:class:`~ConfigurationError` excetpion if no sections are found.
+        """
         if not self.sections:
             raise ConfigurationError("Missing or empty configuration file at "
                                      "'{}'".format(self.path))
 
     def load(self):
+        """
+        Parses and loads the configuration data. This method will trigger a
+        sequence of operations:
+
+        - initialize the parser, and load and parse the configuration file
+        - check the configuration file
+        - perform preprocessing (check for references to other files)
+        - process the sections
+        - process any includes or extensions
+
+        Any problems with the referenced defaults and includes will propagate
+        to this call.
+
+        .. note::
+            Using this method for reloading the configuration is not
+            recommended. Instead, create a new instance using the
+            :py:meth:`~ConfDict.from_file` method.
+        """
         self._init_parser()
         self._check_conf()
         self._preprocess()
@@ -283,21 +372,37 @@ class ConfDict(dict):
         self._postprocess()
 
     def configure(self, path, skip_clean=False, noextend=False):
+        """
+        Configure the :py:class:`~ConfDict` instance for processing.
+
+        The ``path`` is a path to the configuration file. ``skip_clean``
+        parameter is a boolean flag that suppresses type conversion during
+        parsing. ``noextend`` flag suppresses list extension.
+        """
         self.path = path
         self.base_path = os.path.dirname(os.path.abspath(path))
         self.skip_clean = skip_clean
         self.noextend = noextend
 
-    @property
-    def sections(self):
-        return self.parser.sections()
-
     def setdefaults(self, other):
+        """
+        This method is a counterpart of the :py:meth:`~dict.update` method and
+        works like :py:meth:`~dict.setdefault`. The ``other`` argument is a
+        dict or dict-like object, whose key-value pairs are added to the
+        :py:class:`~ConfDict` object if the key does not exist already.
+        """
         for k in other:
             if k not in self:
                 self[k] = other[k]
 
     def import_from_file(self, path, as_defaults=False, ignore_missing=False):
+        """
+        Imports additional options from specified file. The ``as_default`` flag
+        can be used to cause the options to only be imported if they are not
+        already present. The ``ignore_missing`` suppresses the
+        :py:class:`~ConfigurationError` exception when the specified file is
+        missing.
+        """
         try:
             incl = self.__class__.from_file(path, self.skip_clean,
                                             noextend=True)
@@ -316,6 +421,15 @@ class ConfDict(dict):
 
     @classmethod
     def from_file(cls, path, skip_clean=False, noextend=False, defaults={}):
+        """
+        Load the values from the specified file. The ``skip_clean`` flag is
+        used to suppress type conversion. ``noextend`` flag suppresses list
+        extension.
+
+        You may also specify default options using the ``defaults`` argument.
+        This argument should be a dict. Values specified in this dict are
+        overridden by the values present in the configuration file.
+        """
         # Instantiate the ConfDict class and configure it
         self = cls()
         self.update(defaults)
