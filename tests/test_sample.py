@@ -33,6 +33,7 @@ def test_sample_related():
     assert conf['other_section.abc'] == 12
     assert conf['other_section.bcd'] == 2
     assert conf['extended_list'] == ['a', 'b', 'c', 'd', 'e', 'f']
+    assert conf['extend_me'] == ['foo', 'bar', 'baz']
 
 
 def test_sample_with_defaults():
