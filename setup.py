@@ -9,14 +9,16 @@ def read(fname):
         return open(os.path.join(os.path.dirname(__file__), fname)).read()
 
 
-VERSION = mod.__version__
-
 setup(
     name='confloader',
-    version=VERSION,
-    license='BSD',
     description=('Python module for loading .ini configuration files with '
                  'extra bells and whistles.'),
+    keywords='configuration ini confloader',
+    version=mod.__version__,
+    author='Outernet Inc',
+    author_email='apps@outernet.is',
+    license='BSD',
+    url='https://github.com/Outernet-Project/confloader',
     long_description=read('README.rst'),
     py_modules=[mod.__name__],
     classifiers=[
