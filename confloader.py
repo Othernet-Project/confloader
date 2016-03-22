@@ -169,6 +169,7 @@ class ConfDict(dict):
         self.include = []
         self._extensions = []
         self.skip_clean = False
+        self.noextend = False
         super(ConfDict, self).__init__(*args, **kwargs)
 
     def __getitem__(self, key):
@@ -237,6 +238,8 @@ class ConfDict(dict):
             self._extensions.extend(exts)
 
     def _extend(self):
+        if self.noextend:
+            return
         for k, v in self._extensions:
             if self.skip_clean:
                 self.setdefault(k, '')
@@ -272,10 +275,11 @@ class ConfDict(dict):
         self._process()
         self._postprocess()
 
-    def configure(self, path, skip_clean=False):
+    def configure(self, path, skip_clean=False, noextend=False):
         self.path = path
         self.base_path = os.path.dirname(path)
         self.skip_clean = skip_clean
+        self.noextend = noextend
 
     @property
     def sections(self):

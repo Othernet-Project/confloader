@@ -329,6 +329,28 @@ def test_extend_no_clean():
     assert conf['bar'] == 'abcdef'
 
 
+def test_extend_noexted():
+    conf = mod.ConfDict()
+    conf.noextend = True
+    conf['foo'] = [1, 2, 3]
+    conf['bar'] = ['a', 'b', 'c']
+    conf._extensions = [
+        ('foo', [4, 5, 6]),
+        ('bar', ['d', 'e', 'f']),
+    ]
+    conf._extend()
+    assert conf['foo'] == [1, 2, 3]
+    assert conf['bar'] == ['a', 'b', 'c']
+    assert conf._extensions == [
+        ('foo', [4, 5, 6]),
+        ('bar', ['d', 'e', 'f']),
+    ]
+    conf.noextend = False
+    conf._extend()
+    assert conf['foo'] == [1, 2, 3, 4, 5, 6]
+    assert conf['bar'] == ['a', 'b', 'c', 'd', 'e', 'f']
+
+
 @mock.patch.object(mod.ConfDict, '_extend')
 def test_postprocess_extends(extend):
     conf = mod.ConfDict()
@@ -386,10 +408,11 @@ def test_load(postprocess, process, preprocess, check, init):
 
 def test_configure():
     conf = mod.ConfDict()
-    conf.configure('foo/bar/baz.ini', True)
+    conf.configure('foo/bar/baz.ini', True, True)
     assert conf.path == 'foo/bar/baz.ini'
     assert conf.base_path == 'foo/bar'
     assert conf.skip_clean is True
+    assert conf.noextend is True
 
 
 @mock.patch.object(mod.ConfDict, 'load')
