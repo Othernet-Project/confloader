@@ -11,7 +11,6 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 import os
 import re
 import sys
-import logging
 
 try:
     from configparser import RawConfigParser as ConfigParser, NoOptionError
