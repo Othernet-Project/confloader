@@ -291,10 +291,10 @@ class ConfDict(dict):
                 self[k] = other[k]
 
     @classmethod
-    def from_file(cls, path, skip_clean=False, **defaults):
+    def from_file(cls, path, skip_clean=False, noextend=False, **defaults):
         # Instantiate the ConfDict class and configure it
         self = cls()
         self.update(defaults)
-        self.configure(path, skip_clean)
+        self.configure(path, skip_clean, noextend)
         self.load()
         return self

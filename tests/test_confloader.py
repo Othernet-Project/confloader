@@ -420,7 +420,7 @@ def test_configure():
 def test_from_file(configure, load):
     ret = mod.ConfDict.from_file('foo/bar/baz.ini', False, foo='bar')
     assert ret['foo'] == 'bar'
-    configure.assert_called_once_with('foo/bar/baz.ini', False)
+    configure.assert_called_once_with('foo/bar/baz.ini', False, False)
     load.assert_called_once_with()
 
 
