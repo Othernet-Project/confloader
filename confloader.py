@@ -11,6 +11,7 @@ file that comes with the source code, or http://www.gnu.org/licenses/gpl.txt.
 import os
 import re
 import sys
+import logging
 
 try:
     from configparser import RawConfigParser as ConfigParser, NoOptionError
@@ -49,6 +50,8 @@ def make_list(val):
     """
     if type(val) in [list, tuple]:
         return list(val)
+    if val == '':
+        return []
     return [val]
 
 
@@ -223,7 +226,8 @@ class ConfDict(dict):
         self.include = self._get_config_paths('include')
         for p in self.defaults:
             path = os.path.normpath(os.path.join(self.base_path, p))
-            self.setdefaults(self.__class__.from_file(path, self.skip_clean))
+            defl = self.__class__.from_file(path, self.skip_clean)
+            self.setdefaults(defl)
 
     def _process(self):
         """
@@ -288,7 +292,7 @@ class ConfDict(dict):
 
     def configure(self, path, skip_clean=False, noextend=False):
         self.path = path
-        self.base_path = os.path.dirname(path)
+        self.base_path = os.path.dirname(os.path.abspath(path))
         self.skip_clean = skip_clean
         self.noextend = noextend
 

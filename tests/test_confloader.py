@@ -115,7 +115,7 @@ def test_parse_key(section, key, key_ext):
     (True, [True]),
     (False, [False]),
     (None, [None]),
-    ('', ['']),
+    ('', []),  # <-- blank is special-cased
     (['foo', 'bar'], ['foo', 'bar']),
     (('foo', 'bar'), ['foo', 'bar']),
 ])
@@ -425,9 +425,9 @@ def test_load(postprocess, process, preprocess, check, init):
 
 def test_configure():
     conf = mod.ConfDict()
-    conf.configure('foo/bar/baz.ini', True, True)
-    assert conf.path == 'foo/bar/baz.ini'
-    assert conf.base_path == 'foo/bar'
+    conf.configure('/foo/bar/baz.ini', True, True)
+    assert conf.path == '/foo/bar/baz.ini'
+    assert conf.base_path == '/foo/bar'
     assert conf.skip_clean is True
     assert conf.noextend is True
 
