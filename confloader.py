@@ -310,7 +310,7 @@ class ConfDict(dict):
         self._extend(incl._extensions)
 
     @classmethod
-    def from_file(cls, path, skip_clean=False, noextend=False, **defaults):
+    def from_file(cls, path, skip_clean=False, noextend=False, defaults={}):
         # Instantiate the ConfDict class and configure it
         self = cls()
         self.update(defaults)

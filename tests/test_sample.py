@@ -38,7 +38,7 @@ def test_sample_related():
 
 
 def test_sample_with_defaults():
-    conf = mod.ConfDict.from_file(sample_file, excellent=True)
+    conf = mod.ConfDict.from_file(sample_file, defaults=dict(excellent=True))
     assert conf['excellent'] is True
 
 

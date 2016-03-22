@@ -435,7 +435,8 @@ def test_configure():
 @mock.patch.object(mod.ConfDict, 'load')
 @mock.patch.object(mod.ConfDict, 'configure')
 def test_from_file(configure, load):
-    ret = mod.ConfDict.from_file('foo/bar/baz.ini', False, foo='bar')
+    ret = mod.ConfDict.from_file('foo/bar/baz.ini', False,
+                                 defaults=dict(foo='bar'))
     assert ret['foo'] == 'bar'
     configure.assert_called_once_with('foo/bar/baz.ini', False, False)
     load.assert_called_once_with()
