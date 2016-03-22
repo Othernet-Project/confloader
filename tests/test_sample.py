@@ -86,3 +86,10 @@ def test_import_without_overwrite():
     # But they are still avalable as return value
     assert ret['other_section.bcd'] == 11
     assert ret['extend_me'] == [1, 2, 3]
+
+
+def test_import_missing():
+    conf = mod.ConfDict()
+    # This should not raise:
+    ret = conf.import_from_file('missing.ini', ignore_missing=True)
+    assert ret == {}

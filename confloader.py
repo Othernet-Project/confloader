@@ -304,8 +304,12 @@ class ConfDict(dict):
             if k not in self:
                 self[k] = other[k]
 
-    def import_from_file(self, path, as_defaults=False):
-        incl = self.__class__.from_file(path, self.skip_clean, noextend=True)
+    def import_from_file(self, path, as_defaults=False, ignore_missing=False):
+        try:
+            incl = self.__class__.from_file(path, self.skip_clean,
+                                            noextend=True)
+        except self.ConfigurationError:
+            return {}
         if as_defaults:
             self.setdefaults(incl)
         else:
