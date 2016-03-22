@@ -276,7 +276,7 @@ class ConfDict(dict):
 
     def _check_conf(self):
         if not self.sections:
-            raise ConfigurationError("Missing or empty configuration file at"
+            raise ConfigurationError("Missing or empty configuration file at "
                                      "'{}'".format(self.path))
 
     def load(self):
