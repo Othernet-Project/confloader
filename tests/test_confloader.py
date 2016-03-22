@@ -302,7 +302,7 @@ def test_process_resets_extensions(sections, parse_sections):
     ]
 
 
-def test_postprocess_extensions():
+def test_extend():
     conf = mod.ConfDict()
     conf['foo'] = [1, 2, 3]
     conf['bar'] = ['a', 'b', 'c']
@@ -310,12 +310,12 @@ def test_postprocess_extensions():
         ('foo', [4, 5, 6]),
         ('bar', ['d', 'e', 'f']),
     ]
-    conf._postprocess()
+    conf._extend()
     assert conf['foo'] == [1, 2, 3, 4, 5, 6]
     assert conf['bar'] == ['a', 'b', 'c', 'd', 'e', 'f']
 
 
-def test_postprocess_extensions_no_clean():
+def test_extend_no_clean():
     conf = mod.ConfDict()
     conf['foo'] = '123'
     conf['bar'] = 'abc'
@@ -324,9 +324,16 @@ def test_postprocess_extensions_no_clean():
         ('bar', 'def'),
     ]
     conf.skip_clean = True
-    conf._postprocess()
+    conf._extend()
     assert conf['foo'] == '123456'
     assert conf['bar'] == 'abcdef'
+
+
+@mock.patch.object(mod.ConfDict, '_extend')
+def test_postprocess_extends(extend):
+    conf = mod.ConfDict()
+    conf._postprocess()
+    extend.assert_called_once_with()
 
 
 @mock.patch.object(mod.ConfDict, 'update')

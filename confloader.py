@@ -236,16 +236,19 @@ class ConfDict(dict):
             exts = self._parse_section(section)
             self._extensions.extend(exts)
 
-    def _postprocess(self):
-        """
-        Finishes loading proces by processing all extensions and includes.
-        """
+    def _extend(self):
         for k, v in self._extensions:
             if self.skip_clean:
                 self.setdefault(k, '')
                 self[k] += v
             else:
                 extend_key(self, k, v)
+
+    def _postprocess(self):
+        """
+        Finishes loading proces by processing all extensions and includes.
+        """
+        self._extend()
         for p in self.include:
             path = os.path.normpath(os.path.join(self.base_path, p))
             self.update(self.__class__.from_file(path, self.skip_clean))
