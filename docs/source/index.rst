@@ -25,8 +25,9 @@ Documentation
 .. toctree::
    :maxdepth: 2
 
-    writing_ini
-    working_with
+   writing_ini
+   working_with
+   apidoc
 
 Indices and tables
 ==================

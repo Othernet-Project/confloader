@@ -17,8 +17,8 @@ configuration file, you can use the ``from_file()`` method on the
 
 If the configuration file is blank, missing, contains no section, or has
 options that are dangling outside sections, or otherwise malformed, you will
-get a ``ConfigError`` exception. This exception is available as an attribute on
-the ``ConfDict`` class as convenience::
+get a ``ConfigurationError`` exception. This exception is available as an
+attribute on the ``ConfDict`` class as convenience::
 
     try:
         conf = ConfDict.from_file('nonexistent.ini')
