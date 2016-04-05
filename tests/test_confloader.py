@@ -19,6 +19,7 @@ MOD = mod.__name__
     ('--conf     test.ini', 'test.ini'),
     ('--conf\ttest.ini', 'test.ini'),
     ('--conf\ntest.ini', 'test.ini'),
+    ('--conf=conf-with-\'-quote.ini', 'conf-with-\'-quote.ini'),
     ('--conf /path/to/file-test.ini', '/path/to/file-test.ini'),
     ('--conf=/path/to/file-test.ini', '/path/to/file-test.ini'),
     ("--conf='/path/to/file-test.ini'", '/path/to/file-test.ini'),
