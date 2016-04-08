@@ -26,8 +26,9 @@ FACTORS = {
 
 def get_config_path(default=None):
     """
-    Attempt to obtain a path to configuration path from ``--conf`` command line
-    argument, and optionally fall back on specified default path.
+    Attempt to obtain and return a path to configuration file specified by
+    ``--conf`` command line argument, and fall back on specified default path.
+    Default value is ``None``.
     """
     regex = r'--conf[=\s]{1}((["\']{1}(.+)["\']{1})|([^\s]+))\s*'
     arg_str = ' '.join(sys.argv[1:])
