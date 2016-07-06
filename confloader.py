@@ -1,6 +1,7 @@
 import os
 import re
 import sys
+import glob
 
 try:
     from configparser import RawConfigParser as ConfigParser, NoOptionError
@@ -258,8 +259,13 @@ class ConfDict(dict):
         """
         Return a list of paths in the special config keys.
         """
-        paths = parse_value(self.get_option('config', key, ''))
-        return make_list(paths)
+        paths = []
+        parsed_paths = make_list(parse_value(
+            self.get_option('config', key, '')))
+        for p in parsed_paths:
+            path = os.path.normpath(os.path.join(self.base_path, p))
+            paths.extend(glob.glob(path))
+        return paths
 
     def _preprocess(self):
         """
@@ -272,8 +278,7 @@ class ConfDict(dict):
             return
         self.defaults = self._get_config_paths('defaults')
         self.include = self._get_config_paths('include')
-        for p in self.defaults:
-            path = os.path.normpath(os.path.join(self.base_path, p))
+        for path in self.defaults:
             defl = self.__class__.from_file(path, self.skip_clean)
             self.setdefaults(defl)
 
@@ -320,8 +325,7 @@ class ConfDict(dict):
         Finishes loading proces by processing all extensions and includes.
         """
         self._extend()
-        for p in self.include:
-            path = os.path.normpath(os.path.join(self.base_path, p))
+        for path in self.include:
             include = self.__class__.from_file(path, self.skip_clean,
                                                noextend=True)
             self.update(include)
