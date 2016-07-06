@@ -4,6 +4,7 @@ import confloader as mod
 
 
 sample_file = os.path.join(os.path.dirname(__file__), 'sample.ini')
+sample_file2 = os.path.join(os.path.dirname(__file__), 'sample2.ini')
 include2 = os.path.join(os.path.dirname(__file__), 'include2.ini')
 
 
@@ -91,3 +92,9 @@ def test_import_missing():
     # This should not raise:
     ret = conf.import_from_file('missing.ini', ignore_missing=True)
     assert ret == {}
+
+def test_import_glob():
+    conf = mod.ConfDict.from_file(sample_file2)
+    assert any([p.endswith('include1.ini') for p in conf.include])
+    assert any([p.endswith('include2.ini') for p in conf.include])
+    assert all(['bogus' not in p for p in conf.include])

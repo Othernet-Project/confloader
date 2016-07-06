@@ -201,7 +201,9 @@ def test_parse_section_no_clean(get_section):
 
 
 @mock.patch.object(mod.ConfDict, 'get_option')
-def test_get_config_paths(get_option):
+@mock.patch(MOD + '.glob')
+def test_get_config_paths(glob, get_option):
+    glob.glob.side_effect = lambda x: [x]
     conf = mod.ConfDict()
     get_option.return_value = '\nfoo/bar/baz.ini\nbaz/bar/foo.ini'
     ret = conf._get_config_paths('defaults')
@@ -210,7 +212,9 @@ def test_get_config_paths(get_option):
 
 
 @mock.patch.object(mod.ConfDict, 'get_option')
-def test_get_config_paths_single_string(get_option):
+@mock.patch(MOD + '.glob')
+def test_get_config_paths_single_string(glob, get_option):
+    glob.glob.side_effect = lambda x: [x]
     conf = mod.ConfDict()
     get_option.return_value = 'foo/bar/baz.ini'
     ret = conf._get_config_paths('defaults')
@@ -238,9 +242,7 @@ def test_preprocess(setdefaults, from_file, get_config_paths):
     # The defaults and includes are set so they can be accessed later
     assert conf.defaults == ['foo/bar/baz.ini']
     assert conf.include == ['baz/bar/foo.ini']
-    # The one file listed in defaults, should be made relative to current
-    # config's base path (directory) and loaded
-    from_file.assert_called_once_with('test/foo/bar/baz.ini', conf.skip_clean)
+    from_file.assert_called_once_with('foo/bar/baz.ini', conf.skip_clean)
     setdefaults.assert_called_once_with(from_file.return_value)
 
 
@@ -378,7 +380,7 @@ def test_postprocess_include(from_file, update):
     conf.base_path = 'test'
     conf.include = ['foo/bar/baz.ini']
     conf._postprocess()
-    from_file.assert_called_once_with('test/foo/bar/baz.ini', conf.skip_clean,
+    from_file.assert_called_once_with('foo/bar/baz.ini', conf.skip_clean,
                                       noextend=True)
     update.assert_called_once_with(from_file.return_value)
 
