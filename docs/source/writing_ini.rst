@@ -137,6 +137,15 @@ example, the default configuration files are all assumed to reside in the same
 location as the configuation file in which they are referenced. Absolute paths
 are unaffected by this.
 
+Paths may include glob patterns supported by Python's ``glob`` module. The
+above example for the ``include`` key can be rewritten as::
+
+    include =
+        /etc/myapp.d/*.ini
+
+All of the paths referenced by the ``[config]`` section are optional, in the
+sense that missing paths will not cause failure.
+
 Extending lists
 ---------------
 
