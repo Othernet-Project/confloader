@@ -31,7 +31,7 @@ def get_config_path(default=None):
     ``--conf`` command line argument, and fall back on specified default path.
     Default value is ``None``.
     """
-    regex = r'--conf[=\s]{1}((["\']{1}(.+)["\']{1})|([^\s]+))\s*'
+    regex = r'--conf(?:=|\s+)((["\']([^"\']+)["\'])|(\S+))\s*'
     arg_str = ' '.join(sys.argv[1:])
     result = re.search(regex, arg_str)
     return result.group(1).strip(' \'"') if result else default
